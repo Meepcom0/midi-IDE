@@ -16,7 +16,6 @@ enum K {
   C3 = 12
 }
 
-
 enum Mode {
   COMMAND,
   INT_CONSTANT,
@@ -65,28 +64,34 @@ function eventLoop(key: number): void {
       }
       break;
     case Mode.INT_CONSTANT:
-
       break;
-    }
+  }
 }
 
-// function onMIDIMessage(event) {
-//   let str = `MIDI message received at timestamp ${event.timeStamp}[${event.data.length} bytes]: `;
-//   for (const character of event.data) {
-//     str += `0x${character.toString(16)} `;
-//   }
-//   console.log(str);
-// }
+function onMIDIMessage(event: MIDIMessageEvent) {
+  if (event.data!.length === 3 && event.data![0] === 144) {
+    let [_code, note, vel] = event.data!;
+    let MIN_NOTE = 36;
+    note -= MIN_NOTE;
+    if (vel > 0) {
+      console.log(`press ${note} at ${vel}`);
+      eventLoop(note);
+    } else {
+      console.log(`unpress ${note}`);
+    }
+  }
+}
 
-// function startLoggingMIDIInput(midiAccess) {
-//   midiAccess.inputs.forEach((entry) => {
-//     entry.onmidimessage = onMIDIMessage;
-//   });
-// }
+function startLoggingMIDIInput(midiAccess: MIDIAccess) {
+  midiAccess.inputs.forEach((entry) => {
+    entry.onmidimessage = onMIDIMessage;
+  });
+}
 
-// async function setupMidi() {
-//   await navigator.permissions.query({ name: "midi" });
-//   let midiAccess = await navigator.requestMIDIAccess();
-// }
+async function setupMidi() {
+  await navigator.permissions.query({ name: "midi" });
+  let midiAccess = await navigator.requestMIDIAccess();
+  startLoggingMIDIInput(midiAccess);
+}
 
-// setupMidi();
+setupMidi();
