@@ -40,12 +40,15 @@ enum K {
   C5 = 36,
 }
 
+const INT_BIT_DICT = [K.C4, K.D4, K.E4, K.F4, K.G4, K.A4, K.B4, K.C5]
 
 enum Mode {
   TRAVERSE,
   COMMAND,
   OPERATOR,
-  INPUT_CONST
+  VAR_INPUT,
+  INT_INPUT,
+  STR_INPUT
 }
 
 enum NodeType {
@@ -80,7 +83,7 @@ function newNode(current: Node, type: NodeType): Node {
   return current;
 }
 
-function eventLoop(key: number): void {
+function eventLoop(key: K): void {
   switch (key) {
     //change mode
     case K.FF2:
@@ -93,7 +96,7 @@ function eventLoop(key: number): void {
       mode = Mode.OPERATOR;
       break;
     case K.CC3:
-      mode = Mode.INPUT_CONST;
+      mode = Mode.VAR_INPUT;
       break;
     default:
       switch (mode) {
@@ -160,16 +163,27 @@ function eventLoop(key: number): void {
               break;
           }
           break;
-        case Mode.INPUT_CONST:
+        case Mode.VAR_INPUT:
+          //int or string input
           switch(key) {
-            //input byte integer
-            case K.B2:
-              
+            case K.D3:
+              mode = Mode.INT_INPUT
               break;
-            //TODO
-            //input string
+            case K.C3:
+              mode = Mode.STR_INPUT
+              break;
           }
           break;
+        case Mode.INT_INPUT:
+          let byte = [0, 0, 0, 0, 0, 0, 0, 0]
+          if (INT_BIT_DICT.includes(key)) {
+            let i = INT_BIT_DICT.indexOf(key)
+            byte[i] = 1-byte[i]
+          }
+          if (key == K.D3) {
+            //let n: Node = newNode(currentNode, NodeType.INT_CONST)
+            //n.index = currentNode.children.length
+          }
       }
       break;
   }
