@@ -14,12 +14,40 @@ enum K {
   AA2 = 10,
   B2 = 11,
   C3 = 12,
+<<<<<<< HEAD
+=======
+  CC3 = 13,
+  D3 = 14,
+  DD3 = 15,
+  E3 = 16,
+  F3 = 17,
+  FF3 = 18,
+  G3 = 19,
+  GG3 = 20,
+  A3 = 21,
+  AA3 = 22,
+  B3 = 23,
+  C4 = 24,
+  CC4 = 25,
+  D4 = 26,
+  DD4 = 27,
+  E4 = 28,
+  F4 = 29,
+  FF4 = 30,
+  G4 = 31,
+  GG4 = 32,
+  A4 = 33,
+  AA4 = 34,
+  B4 = 35,
+  C5 = 36,
+>>>>>>> dc07589cb9416dbb00a8a5ad8eae23cad4d93238
 }
 
 enum Mode {
   TRAVERSE,
   COMMAND,
-  EDIT,
+  OPERATOR,
+  INPUT_CONST
 }
 
 enum NodeType {
@@ -36,16 +64,16 @@ enum NodeType {
 type Node = {
   type: NodeType;
   parent: Node | undefined;
-  index: number | undefined; // defined such that this == this.parent[index]
+  index: number; // defined such that this == this.parent[index]
   children: Node[];
 };
 
-let mode = Mode.EDIT;
+let mode = Mode.OPERATOR;
 
 let currentNode: Node = {
   type: NodeType.PROGRAM,
   parent: undefined,
-  index: undefined,
+  index: 0,
   children: [],
 };
 
@@ -69,19 +97,67 @@ function eventLoop(key: number): void {
       mode = Mode.COMMAND;
       break;
     case K.AA2:
-      mode = Mode.EDIT;
+      mode = Mode.OPERATOR;
+      break;
+    case K.CC3:
+      mode = Mode.INPUT_CONST;
       break;
     default:
-      //
       switch (mode) {
         case Mode.TRAVERSE:
-          //TODO
+          switch (key) {  
+            //move up tree
+            case K.C5:
+              if (currentNode.parent !== undefined) {
+                currentNode = currentNode.parent!
+              }
+              break;
+            //move down tree (0th leaf)
+            case K.C3:
+              if (currentNode.children.length > 0) {
+                currentNode = currentNode.children[0]
+              }
+              break;
+            //move to right sibling
+            case K.C4:
+            case K.E4:
+            case K.G4:
+              if ((currentNode.parent !== undefined) && (currentNode.index !== currentNode.parent!.children.length-1)) {
+                currentNode = currentNode.parent!.children[currentNode.index!+1];
+              }
+              break;
+            //move to left sibling
+            case K.E3:
+            case K.G3:
+            case K.A3:
+              if ((currentNode.parent !== undefined) && (currentNode.index !== 0)) {
+                currentNode = currentNode.parent!.children[currentNode.index!-1];
+              }
+              break;
+            //TODO
+
+            //move right to next leaf
+            //move left to next leaf
+
+          }
           break;
         case Mode.COMMAND:
           //TODO
+
+          //save
+          //run
+          //what else
+          switch(key) {
+
+          }
           break;
+<<<<<<< HEAD
         case Mode.EDIT:
           switch (key) {
+=======
+        case Mode.OPERATOR:
+          switch(key) {
+>>>>>>> dc07589cb9416dbb00a8a5ad8eae23cad4d93238
             case K.G2:
               //assign
               currentNode = newNode(currentNode, NodeType.ASSIGN);
@@ -94,6 +170,16 @@ function eventLoop(key: number): void {
               //print
               currentNode = newNode(currentNode, NodeType.PRINT);
               break;
+          }
+          break;
+        case Mode.INPUT_CONST:
+          switch(key) {
+            //input byte integer
+            case K.B2:
+              
+              break;
+            //TODO
+            //input string
           }
           break;
       }
