@@ -49,10 +49,8 @@ function byteToInt(b: number[]): number {
 }
 
 enum Mode {
-  TRAVERSE,
   COMMAND,
-  CONTROL_FLOW,
-  EXPRESSION,
+  EDIT,
   VAR_INPUT,
   INT_INPUT,
   STR_INPUT,
@@ -60,7 +58,6 @@ enum Mode {
 
 enum NodeType {
   BLANK,
-  PROGRAM,
   BLOCK,
   END,
   PRINT,
@@ -89,10 +86,10 @@ type Node = {
   children: Node[];
 };
 
-let mode = Mode.CONTROL_FLOW;
+let mode = Mode.EDIT;
 
 let currentNode: Node = {
-  type: NodeType.PROGRAM,
+  type: NodeType.BLOCK,
   data: undefined,
   parent: undefined,
   index: 0,
@@ -128,9 +125,6 @@ const KEY_EXPRESSION_MAP = new Map([[K.C3, NodeType.ADD], [K.CC3, NodeType.SUBTR
 //IF
 //WHILE
 //FOR ?
-let byte: number[]
-let var_name: K[]
-
 function eventLoop(key: K): void {
   switch (key) {
     //change mode
@@ -141,7 +135,7 @@ function eventLoop(key: K): void {
       mode = Mode.COMMAND;
       break;
     case K.AA2:
-      mode = Mode.CONTROL_FLOW;
+      mode = Mode.STATEMENT;
       break;
     default:
       switch (mode) {
@@ -196,12 +190,13 @@ function eventLoop(key: K): void {
               break;
           }
           break;
-        case Mode.CONTROL_FLOW:
+        case Mode.STATEMENT:
+          //TODO DETECT IF CURRENT NODE IS ALREADY STATEMENT
+
           //reserve C4-G4
           switch(key) {
             case K.C4:
               //assign
-              mode = Mode.VAR_INPUT
               break;
             case K.D4:
               //if
@@ -219,19 +214,21 @@ function eventLoop(key: K): void {
         case Mode.EXPRESSION:
           if (KEY_EXPRESSION_MAP.has(key)) {
             //add operator node B2-E3 + B3 reserved
-            currentNode = newNode(currentNode, KEY_OP_MAP.get(key)!)
+            currentNode = newNode(currentNode, KEY_EXPRESSION_MAP.get(key)!)
+            currentNode.children = [blankNode(currentNode, 0), blankNode(currentNode, 1)]
           } else {
             //switch to input const or var name mode
             switch (key) {
               case K.G2:
-                var_name = []
+                currentNode = newNode(currentNode, NodeType.VARIABLE, [])
                 mode = Mode.VAR_INPUT
                 break;
               case K.A2:
+                currentNode = newNode(currentNode, NodeType.STR_CONST, "")
                 mode = Mode.STR_INPUT
                 break;
               case K.B2:
-                byte = [0, 0, 0, 0, 0, 0, 0, 0];
+                currentNode = newNode(currentNode, NodeType.INT_CONST, [0, 0, 0, 0, 0, 0, 0, 0])
                 mode = Mode.INT_INPUT
                 break;
             }
@@ -241,27 +238,22 @@ function eventLoop(key: K): void {
           //enter var name
           if (key === K.G2) {
             //add var name to tree
-            let n: Node = newNode(currentNode, NodeType.VARIABLE)
-            n.index = currentNode.children.length
-            n.data = var_name
-            mode = Mode.OPERATOR
+            mode = Mode.STATEMENT
+            currentNode = currentNode.parent!
           } else {
             //add note to name
-            var_name.push(key)
+            currentNode.data.push(key)
           }
           break;
         case Mode.INT_INPUT:
           if (BYTE_INT_MAP.has(key)) {
             //toggle bit
             let i = BYTE_INT_MAP.get(key)!;
-            byte[i] = 1 - byte[i];
+            currentNode.data[i] = 1 - currentNode.data[i];
           }
           if (key === K.B2) {
-            //add in const int
-            let n: Node = newNode(currentNode, NodeType.INT_CONST)
-            n.index = currentNode.children.length
-            n.data = byteToInt(byte)
-            mode = Mode.OPERATOR
+            //finish const and leave
+            mode = Mode.STATEMENT
           }
         case Mode.STR_INPUT:
           if (key === K.A2) {
