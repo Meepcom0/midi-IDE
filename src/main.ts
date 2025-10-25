@@ -51,13 +51,15 @@ function byteToInt(b: number[]): number {
 enum Mode {
   TRAVERSE,
   COMMAND,
-  OPERATOR,
+  CONTROL_FLOW,
+  EXPRESSION,
   VAR_INPUT,
   INT_INPUT,
   STR_INPUT,
 }
 
 enum NodeType {
+  BLANK,
   PROGRAM,
   BLOCK,
   END,
@@ -76,6 +78,7 @@ enum NodeType {
   LESS_THAN,
   GREATER_THAN_EQ,
   LESS_THAN_EQ,
+  EQUALS,
 }
 
 type Node = {
@@ -86,7 +89,7 @@ type Node = {
   children: Node[];
 };
 
-let mode = Mode.OPERATOR;
+let mode = Mode.CONTROL_FLOW;
 
 let currentNode: Node = {
   type: NodeType.PROGRAM,
@@ -98,7 +101,7 @@ let currentNode: Node = {
 
 function newNode(current: Node, type: NodeType, data?: any): Node {
   current.children.push({
-    type: type,
+    type,
     data,
     parent: current,
     index: current.children.length,
@@ -107,8 +110,24 @@ function newNode(current: Node, type: NodeType, data?: any): Node {
   return current;
 }
 
+function blankNode(parent: Node, index: number): Node {
+  return {
+    type: NodeType.BLANK,
+    data: undefined,
+    parent,
+    index,
+    children: [],
+  }
+}
+
 const BYTE_INT_MAP = new Map([[K.C4, 0], [K.D4, 1], [K.E4, 2], [K.F4, 3], [K.G4, 4], [K.A4, 5], [K.B4, 6], [K.C5, 7]]);
-const KEY_OP_MAP = new Map([[K.G2, NodeType.ASSIGN], [K.C3, NodeType.ADD], [K.CC3, NodeType.SUBTRACT], [K.D3, NodeType.MULTIPLY], [K.DD3, NodeType.DIVIDE], [K.E3, NodeType.EXPONENT],[K.F3, NodeType.GREATER_THAN],[K.FF3, NodeType.LESS_THAN],[K.G3, NodeType.GREATER_THAN_EQ], [K.GG3, NodeType.LESS_THAN_EQ], [K.B3, NodeType.PRINT]]);
+const KEY_EXPRESSION_MAP = new Map([[K.C3, NodeType.ADD], [K.CC3, NodeType.SUBTRACT], [K.D3, NodeType.MULTIPLY], [K.DD3, NodeType.DIVIDE], [K.E3, NodeType.EXPONENT],[K.F3, NodeType.GREATER_THAN],[K.FF3, NodeType.LESS_THAN],[K.G3, NodeType.GREATER_THAN_EQ], [K.GG3, NodeType.LESS_THAN_EQ], [K.A3, NodeType.EQUALS]]);
+
+//K.B3, NodeType.PRINT
+//[K.G2, NodeType.ASSIGN]
+//IF
+//WHILE
+//FOR ?
 let byte: number[]
 let var_name: K[]
 
@@ -122,10 +141,7 @@ function eventLoop(key: K): void {
       mode = Mode.COMMAND;
       break;
     case K.AA2:
-      mode = Mode.OPERATOR;
-      break;
-    case K.CC3:
-      mode = Mode.VAR_INPUT;
+      mode = Mode.CONTROL_FLOW;
       break;
     default:
       switch (mode) {
@@ -144,9 +160,9 @@ function eventLoop(key: K): void {
               }
               break;
             //move to right sibling
-            case K.C4:
             case K.E4:
             case K.G4:
+            case K.A4:
               if (
                 currentNode.parent !== undefined &&
                 currentNode.index !== currentNode.parent!.children.length - 1
@@ -164,22 +180,44 @@ function eventLoop(key: K): void {
                   currentNode.parent!.children[currentNode.index! - 1];
               }
               break;
-            //TODO
-
             //move right to next leaf
+            //case :
             //move left to next leaf
           }
           break;
         case Mode.COMMAND:
           //TODO
-          //save
-          //run
-          //what else
           switch (key) {
+            case K.F2:
+              save()
+              break;
+            case K.G2:
+              run()
+              break;
           }
           break;
-        case Mode.OPERATOR:
-          if (KEY_OP_MAP.has(key)) {
+        case Mode.CONTROL_FLOW:
+          //reserve C4-G4
+          switch(key) {
+            case K.C4:
+              //assign
+              mode = Mode.VAR_INPUT
+              break;
+            case K.D4:
+              //if
+              break;
+            case K.E4:
+              //while
+              break;
+            case K.F4:
+              //for
+              break;
+            case K.G4:
+              //print
+              break;
+          }
+        case Mode.EXPRESSION:
+          if (KEY_EXPRESSION_MAP.has(key)) {
             //add operator node B2-E3 + B3 reserved
             currentNode = newNode(currentNode, KEY_OP_MAP.get(key)!)
           } else {
@@ -233,6 +271,16 @@ function eventLoop(key: K): void {
       }
       break;
   }
+}
+
+//TODO
+function save() {
+
+}
+
+//TODO
+function run() {
+
 }
 
 function onMIDIMessage(event: MIDIMessageEvent) {
