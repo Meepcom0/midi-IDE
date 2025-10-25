@@ -41,11 +41,11 @@ enum K {
 }
 
 function byteToInt(b: number[]): number {
-  let val = 0
+  let val = 0;
   for (let i = 7; i >= 0; i--) {
-    val = val*2+b[i]
+    val = val * 2 + b[i];
   }
-  return val
+  return val;
 }
 
 enum Mode {
@@ -96,15 +96,18 @@ let currentNode: Node = {
   children: [],
 };
 
+let root = currentNode;
+
 function newNode(current: Node, type: NodeType, data?: any): Node {
-  current.children.push({
+  let child = {
     type,
     data,
     parent: current,
     index: current.children.length,
     children: [],
-  });
-  return current;
+  };
+  current.children.push(child);
+  return child;
 }
 
 function blankNode(parent: Node, index: number): Node {
@@ -114,17 +117,43 @@ function blankNode(parent: Node, index: number): Node {
     parent,
     index,
     children: [],
-  }
+  };
 }
 
-const BYTE_INT_MAP = new Map([[K.C4, 0], [K.D4, 1], [K.E4, 2], [K.F4, 3], [K.G4, 4], [K.A4, 5], [K.B4, 6], [K.C5, 7]]);
-const KEY_EXPRESSION_MAP = new Map([[K.C3, NodeType.ADD], [K.CC3, NodeType.SUBTRACT], [K.D3, NodeType.MULTIPLY], [K.DD3, NodeType.DIVIDE], [K.E3, NodeType.EXPONENT],[K.F3, NodeType.GREATER_THAN],[K.FF3, NodeType.LESS_THAN],[K.G3, NodeType.GREATER_THAN_EQ], [K.GG3, NodeType.LESS_THAN_EQ], [K.A3, NodeType.EQUALS]]);
+const BYTE_INT_MAP = new Map([
+  [K.C4, 0],
+  [K.D4, 1],
+  [K.E4, 2],
+  [K.F4, 3],
+  [K.G4, 4],
+  [K.A4, 5],
+  [K.B4, 6],
+  [K.C5, 7],
+]);
+const KEY_EXPRESSION_MAP = new Map([
+  [K.C3, NodeType.ADD],
+  [K.CC3, NodeType.SUBTRACT],
+  [K.D3, NodeType.MULTIPLY],
+  [K.DD3, NodeType.DIVIDE],
+  [K.E3, NodeType.EXPONENT],
+  [K.F3, NodeType.GREATER_THAN],
+  [K.FF3, NodeType.LESS_THAN],
+  [K.G3, NodeType.GREATER_THAN_EQ],
+  [K.GG3, NodeType.LESS_THAN_EQ],
+  [K.A3, NodeType.EQUALS],
+]);
 
 //K.B3, NodeType.PRINT
 //[K.G2, NodeType.ASSIGN]
 //IF
 //WHILE
 //FOR ?
+<<<<<<< HEAD
+=======
+let byte: number[];
+let var_name: K[];
+
+>>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
 function eventLoop(key: K): void {
   switch (key) {
     //change mode
@@ -183,10 +212,10 @@ function eventLoop(key: K): void {
           //TODO
           switch (key) {
             case K.F2:
-              save()
+              save();
               break;
             case K.G2:
-              run()
+              run();
               break;
           }
           break;
@@ -194,9 +223,13 @@ function eventLoop(key: K): void {
           //TODO DETECT IF CURRENT NODE IS ALREADY STATEMENT
 
           //reserve C4-G4
-          switch(key) {
+          switch (key) {
             case K.C4:
               //assign
+<<<<<<< HEAD
+=======
+              mode = Mode.VAR_INPUT;
+>>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
               break;
             case K.D4:
               //if
@@ -214,12 +247,17 @@ function eventLoop(key: K): void {
         case Mode.EXPRESSION:
           if (KEY_EXPRESSION_MAP.has(key)) {
             //add operator node B2-E3 + B3 reserved
+<<<<<<< HEAD
             currentNode = newNode(currentNode, KEY_EXPRESSION_MAP.get(key)!)
             currentNode.children = [blankNode(currentNode, 0), blankNode(currentNode, 1)]
+=======
+            currentNode = newNode(currentNode, KEY_OP_MAP.get(key)!);
+>>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
           } else {
             //switch to input const or var name mode
             switch (key) {
               case K.G2:
+<<<<<<< HEAD
                 currentNode = newNode(currentNode, NodeType.VARIABLE, [])
                 mode = Mode.VAR_INPUT
                 break;
@@ -230,6 +268,17 @@ function eventLoop(key: K): void {
               case K.B2:
                 currentNode = newNode(currentNode, NodeType.INT_CONST, [0, 0, 0, 0, 0, 0, 0, 0])
                 mode = Mode.INT_INPUT
+=======
+                var_name = [];
+                mode = Mode.VAR_INPUT;
+                break;
+              case K.A2:
+                mode = Mode.STR_INPUT;
+                break;
+              case K.B2:
+                byte = [0, 0, 0, 0, 0, 0, 0, 0];
+                mode = Mode.INT_INPUT;
+>>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
                 break;
             }
           }
@@ -238,11 +287,21 @@ function eventLoop(key: K): void {
           //enter var name
           if (key === K.G2) {
             //add var name to tree
+<<<<<<< HEAD
             mode = Mode.STATEMENT
             currentNode = currentNode.parent!
           } else {
             //add note to name
             currentNode.data.push(key)
+=======
+            let n: Node = newNode(currentNode, NodeType.VARIABLE);
+            n.index = currentNode.children.length;
+            n.data = var_name;
+            mode = Mode.OPERATOR;
+          } else {
+            //add note to name
+            var_name.push(key);
+>>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
           }
           break;
         case Mode.INT_INPUT:
@@ -252,28 +311,33 @@ function eventLoop(key: K): void {
             currentNode.data[i] = 1 - currentNode.data[i];
           }
           if (key === K.B2) {
+<<<<<<< HEAD
             //finish const and leave
             mode = Mode.STATEMENT
+=======
+            //add in const int
+            let n: Node = newNode(currentNode, NodeType.INT_CONST);
+            n.index = currentNode.children.length;
+            n.data = byteToInt(byte);
+            mode = Mode.OPERATOR;
+>>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
           }
         case Mode.STR_INPUT:
           if (key === K.A2) {
             //TODO
-            mode = Mode.OPERATOR
+            mode = Mode.OPERATOR;
           }
       }
       break;
   }
+  renderTheProgram();
 }
 
 //TODO
-function save() {
-
-}
+function save() {}
 
 //TODO
-function run() {
-
-}
+function run() {}
 
 function onMIDIMessage(event: MIDIMessageEvent) {
   if (event.data!.length === 3 && event.data![0] === 144) {
@@ -295,17 +359,6 @@ function startLoggingMIDIInput(midiAccess: MIDIAccess) {
   });
 }
 
-async function main() {
-  await navigator.permissions.query({ name: "midi" });
-  let midiAccess = await navigator.requestMIDIAccess();
-  startLoggingMIDIInput(midiAccess);
-
-  let element = renderProgram(currentNode);
-  document.body.appendChild(element);
-}
-
-main();
-
 function div(): Element {
   const element = document.createElement("div");
   return element;
@@ -318,12 +371,13 @@ function span(content: string): Element {
 }
 
 function renderProgram(node: Node): Element {
-  let indentation = 0;
-
   function renderBlock(node: Node): Element {
     const blockElement = document.createElement("div");
     for (const statement of node.children) {
-      blockElement.appendChild(renderStatement(statement));
+      let statementElement = renderStatement(statement);
+      (statementElement as HTMLDivElement).style.transform =
+        "translate(12px, 0px)";
+      blockElement.appendChild(statementElement);
     }
     return blockElement;
   }
@@ -358,6 +412,7 @@ function renderProgram(node: Node): Element {
   function renderAssign(node: Node): Element {
     let element = div();
     element.appendChild(renderVariable(node.children[0]));
+    element.append(span(" = "));
     element.appendChild(renderExpression(node.children[1]));
     return element;
   }
@@ -425,3 +480,39 @@ function renderProgram(node: Node): Element {
 
   return renderBlock(node.children[0]);
 }
+
+function renderTheProgram() {
+  document.body.innerHTML = "";
+  document.body.appendChild(renderProgram(root));
+}
+
+async function main() {
+  await navigator.permissions.query({ name: "midi" });
+  let midiAccess = await navigator.requestMIDIAccess();
+  startLoggingMIDIInput(midiAccess);
+
+  currentNode = newNode(currentNode, NodeType.BLOCK);
+  currentNode = newNode(currentNode, NodeType.IF);
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
+  currentNode = currentNode.parent!;
+  currentNode = newNode(currentNode, NodeType.BLOCK);
+  currentNode = newNode(currentNode, NodeType.ASSIGN);
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
+  currentNode = currentNode.parent!;
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "y");
+  currentNode = currentNode.parent!;
+  currentNode = currentNode.parent!;
+  currentNode = currentNode.parent!;
+  currentNode = newNode(currentNode, NodeType.BLOCK);
+  currentNode = newNode(currentNode, NodeType.ASSIGN);
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
+  currentNode = currentNode.parent!;
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "y");
+  currentNode = root;
+
+  renderTheProgram();
+
+  console.log(currentNode);
+}
+
+main();
