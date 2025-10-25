@@ -128,3 +128,57 @@ async function setupMidi() {
 }
 
 setupMidi();
+
+function renderProgram(node: Node, element: HTMLElement): void {
+  let indentation = 0;
+
+  function renderBlock(node: Node): Element {
+    const blockElement = document.createElement("div");
+    for (const statement of node.children) {
+      blockElement.appendChild(renderStatement(statement));
+    }
+    return blockElement;
+  }
+
+  function renderStatement(statement: Node): Element {
+    switch (statement.type) {
+      case NodeType.IF: {
+        return renderIf(statement);
+      }
+      case NodeType.ASSIGN: {
+        return renderAssign(statement);
+      }
+      case NodeType.PRINT: {
+        return renderPrint(statement);
+      }
+      default:
+        throw new Error();
+    }
+  }
+
+  function renderPrint(node: Node): Element {
+    let element = document.createElement("div");
+    element.innerHTML = `print `;
+    element.appendChild(renderExpression(node));
+    return element;
+  }
+
+  function renderAssign(node: Node): Element {}
+
+  function renderIf(node: Node): Element {}
+
+  function renderExpression(node: Node): Element {
+    switch (node.type) {
+      case NodeType.ADD: {
+        break;
+      }
+      case NodeType.GREATER_THAN: {
+        break;
+      }
+    }
+  }
+
+  function renderAdd(node: Node): Element {}
+
+  function renderGreaterThan(node: Node): Element {}
+}
