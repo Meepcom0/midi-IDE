@@ -40,7 +40,13 @@ enum K {
   C5 = 36,
 }
 
-const INT_BIT_DICT = [K.C4, K.D4, K.E4, K.F4, K.G4, K.A4, K.B4, K.C5];
+function byteToInt(b: number[]): number {
+  let val = 0
+  for (let i = 7; i >= 0; i--) {
+    val = val*2+b[i]
+  }
+  return val
+}
 
 enum Mode {
   TRAVERSE,
@@ -57,11 +63,19 @@ enum NodeType {
   END,
   PRINT,
   ASSIGN,
-  ADD,
-  IF,
-  GREATER_THAN,
   VARIABLE,
   INT_CONST,
+  STR_CONST,
+  ADD,
+  SUBTRACT,
+  MULTIPLY,
+  DIVIDE,
+  EXPONENT,
+  IF,
+  GREATER_THAN,
+  LESS_THAN,
+  GREATER_THAN_EQ,
+  LESS_THAN_EQ,
 }
 
 type Node = {
@@ -92,6 +106,11 @@ function newNode(current: Node, type: NodeType, data?: any): Node {
   });
   return current;
 }
+
+const BYTE_INT_MAP = new Map([[K.C4, 0], [K.D4, 1], [K.E4, 2], [K.F4, 3], [K.G4, 4], [K.A4, 5], [K.B4, 6], [K.C5, 7]]);
+const KEY_OP_MAP = new Map([[K.G2, NodeType.ASSIGN], [K.C3, NodeType.ADD], [K.CC3, NodeType.SUBTRACT], [K.D3, NodeType.MULTIPLY], [K.DD3, NodeType.DIVIDE], [K.E3, NodeType.EXPONENT],[K.F3, NodeType.GREATER_THAN],[K.FF3, NodeType.LESS_THAN],[K.G3, NodeType.GREATER_THAN_EQ], [K.GG3, NodeType.LESS_THAN_EQ], [K.B3, NodeType.PRINT]]);
+let byte: number[]
+let var_name: K[]
 
 function eventLoop(key: K): void {
   switch (key) {
@@ -153,7 +172,6 @@ function eventLoop(key: K): void {
           break;
         case Mode.COMMAND:
           //TODO
-
           //save
           //run
           //what else
@@ -161,41 +179,56 @@ function eventLoop(key: K): void {
           }
           break;
         case Mode.OPERATOR:
-          switch (key) {
-            case K.G2:
-              //assign
-              currentNode = newNode(currentNode, NodeType.ASSIGN);
-              break;
-            case K.F2:
-              //add
-              currentNode = newNode(currentNode, NodeType.ADD);
-              break;
-            case K.G2:
-              //print
-              currentNode = newNode(currentNode, NodeType.PRINT);
-              break;
+          if (KEY_OP_MAP.has(key)) {
+            //add operator node B2-E3 + B3 reserved
+            currentNode = newNode(currentNode, KEY_OP_MAP.get(key)!)
+          } else {
+            //switch to input const or var name mode
+            switch (key) {
+              case K.G2:
+                var_name = []
+                mode = Mode.VAR_INPUT
+                break;
+              case K.A2:
+                mode = Mode.STR_INPUT
+                break;
+              case K.B2:
+                byte = [0, 0, 0, 0, 0, 0, 0, 0];
+                mode = Mode.INT_INPUT
+                break;
+            }
           }
           break;
         case Mode.VAR_INPUT:
-          //int or string input
-          switch (key) {
-            case K.D3:
-              mode = Mode.INT_INPUT;
-              break;
-            case K.C3:
-              mode = Mode.STR_INPUT;
-              break;
+          //enter var name
+          if (key === K.G2) {
+            //add var name to tree
+            let n: Node = newNode(currentNode, NodeType.VARIABLE)
+            n.index = currentNode.children.length
+            n.data = var_name
+            mode = Mode.OPERATOR
+          } else {
+            //add note to name
+            var_name.push(key)
           }
           break;
         case Mode.INT_INPUT:
-          let byte = [0, 0, 0, 0, 0, 0, 0, 0];
-          if (INT_BIT_DICT.includes(key)) {
-            let i = INT_BIT_DICT.indexOf(key);
+          if (BYTE_INT_MAP.has(key)) {
+            //toggle bit
+            let i = BYTE_INT_MAP.get(key)!;
             byte[i] = 1 - byte[i];
           }
-          if (key == K.D3) {
+          if (key === K.B2) {
+            //add in const int
             let n: Node = newNode(currentNode, NodeType.INT_CONST)
             n.index = currentNode.children.length
+            n.data = byteToInt(byte)
+            mode = Mode.OPERATOR
+          }
+        case Mode.STR_INPUT:
+          if (key === K.A2) {
+            //TODO
+            mode = Mode.OPERATOR
           }
       }
       break;
