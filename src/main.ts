@@ -186,8 +186,8 @@ function eventLoop(key: K): void {
             byte[i] = 1-byte[i]
           }
           if (key == K.D3) {
-            //let n: Node = newNode(currentNode, NodeType.INT_CONST)
-            //n.index = currentNode.children.length
+            let n: Node = newNode(currentNode, NodeType.INT_CONST)
+            n.index = currentNode.children.length
           }
       }
       break;
