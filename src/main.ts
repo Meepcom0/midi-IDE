@@ -82,15 +82,18 @@ let currentNode: Node = {
   children: [],
 };
 
+let root = currentNode;
+
 function newNode(current: Node, type: NodeType, data?: any): Node {
-  current.children.push({
+  let child = {
     type: type,
     data,
     parent: current,
     index: current.children.length,
     children: [],
-  });
-  return current;
+  };
+  current.children.push(child);
+  return child;
 }
 
 function eventLoop(key: K): void {
@@ -200,6 +203,7 @@ function eventLoop(key: K): void {
       }
       break;
   }
+  renderTheProgram();
 }
 
 function onMIDIMessage(event: MIDIMessageEvent) {
@@ -222,17 +226,6 @@ function startLoggingMIDIInput(midiAccess: MIDIAccess) {
   });
 }
 
-async function main() {
-  await navigator.permissions.query({ name: "midi" });
-  let midiAccess = await navigator.requestMIDIAccess();
-  startLoggingMIDIInput(midiAccess);
-
-  let element = renderProgram(currentNode);
-  document.body.appendChild(element);
-}
-
-main();
-
 function div(): Element {
   const element = document.createElement("div");
   return element;
@@ -245,12 +238,13 @@ function span(content: string): Element {
 }
 
 function renderProgram(node: Node): Element {
-  let indentation = 0;
-
   function renderBlock(node: Node): Element {
     const blockElement = document.createElement("div");
     for (const statement of node.children) {
-      blockElement.appendChild(renderStatement(statement));
+      let statementElement = renderStatement(statement);
+      (statementElement as HTMLDivElement).style.transform =
+        "translate(12px, 0px)";
+      blockElement.appendChild(statementElement);
     }
     return blockElement;
   }
@@ -285,6 +279,7 @@ function renderProgram(node: Node): Element {
   function renderAssign(node: Node): Element {
     let element = div();
     element.appendChild(renderVariable(node.children[0]));
+    element.append(span(" = "));
     element.appendChild(renderExpression(node.children[1]));
     return element;
   }
@@ -352,3 +347,39 @@ function renderProgram(node: Node): Element {
 
   return renderBlock(node.children[0]);
 }
+
+function renderTheProgram() {
+  document.body.innerHTML = "";
+  document.body.appendChild(renderProgram(root));
+}
+
+async function main() {
+  await navigator.permissions.query({ name: "midi" });
+  let midiAccess = await navigator.requestMIDIAccess();
+  startLoggingMIDIInput(midiAccess);
+
+  currentNode = newNode(currentNode, NodeType.BLOCK);
+  currentNode = newNode(currentNode, NodeType.IF);
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
+  currentNode = currentNode.parent!;
+  currentNode = newNode(currentNode, NodeType.BLOCK);
+  currentNode = newNode(currentNode, NodeType.ASSIGN);
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
+  currentNode = currentNode.parent!;
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "y");
+  currentNode = currentNode.parent!;
+  currentNode = currentNode.parent!;
+  currentNode = currentNode.parent!;
+  currentNode = newNode(currentNode, NodeType.BLOCK);
+  currentNode = newNode(currentNode, NodeType.ASSIGN);
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
+  currentNode = currentNode.parent!;
+  currentNode = newNode(currentNode, NodeType.VARIABLE, "y");
+  currentNode = root;
+
+  renderTheProgram();
+
+  console.log(currentNode);
+}
+
+main();
