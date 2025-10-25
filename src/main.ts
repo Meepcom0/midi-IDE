@@ -79,7 +79,12 @@ let currentNode: Node = {
 };
 
 function newNode(current: Node, type: NodeType): Node {
-  current.children.push({type: type, parent: current, index: current.children.length, children: []})
+  current.children.push({
+    type: type,
+    parent: current,
+    index: current.children.length,
+    children: [],
+  });
   return current;
 }
 
@@ -187,26 +192,86 @@ function eventLoop(key: K): void {
       }
       break;
   }
-  
 }
 
-// function onMIDIMessage(event) {
-//   let str = `MIDI message received at timestamp ${event.timeStamp}[${event.data.length} bytes]: `;
-//   for (const character of event.data) {
-//     str += `0x${character.toString(16)} `;
-//   }
-//   console.log(str);
-// }
+function onMIDIMessage(event: MIDIMessageEvent) {
+  if (event.data!.length === 3 && event.data![0] === 144) {
+    let [_code, note, vel] = event.data!;
+    let MIN_NOTE = 36;
+    note -= MIN_NOTE;
+    if (vel > 0) {
+      console.log(`press ${note} at ${vel}`);
+      eventLoop(note);
+    } else {
+      console.log(`unpress ${note}`);
+    }
+  }
+}
 
-// function startLoggingMIDIInput(midiAccess) {
-//   midiAccess.inputs.forEach((entry) => {
-//     entry.onmidimessage = onMIDIMessage;
-//   });
-// }
+function startLoggingMIDIInput(midiAccess: MIDIAccess) {
+  midiAccess.inputs.forEach((entry) => {
+    entry.onmidimessage = onMIDIMessage;
+  });
+}
 
-// async function setupMidi() {
-//   await navigator.permissions.query({ name: "midi" });
-//   let midiAccess = await navigator.requestMIDIAccess();
-// }
+async function setupMidi() {
+  await navigator.permissions.query({ name: "midi" });
+  let midiAccess = await navigator.requestMIDIAccess();
+  startLoggingMIDIInput(midiAccess);
+}
 
-// setupMidi();
+setupMidi();
+
+function renderProgram(node: Node, element: HTMLElement): void {
+  let indentation = 0;
+
+  function renderBlock(node: Node): Element {
+    const blockElement = document.createElement("div");
+    for (const statement of node.children) {
+      blockElement.appendChild(renderStatement(statement));
+    }
+    return blockElement;
+  }
+
+  function renderStatement(statement: Node): Element {
+    switch (statement.type) {
+      case NodeType.IF: {
+        return renderIf(statement);
+      }
+      case NodeType.ASSIGN: {
+        return renderAssign(statement);
+      }
+      case NodeType.PRINT: {
+        return renderPrint(statement);
+      }
+      default:
+        throw new Error();
+    }
+  }
+
+  function renderPrint(node: Node): Element {
+    let element = document.createElement("div");
+    element.innerHTML = `print `;
+    element.appendChild(renderExpression(node));
+    return element;
+  }
+
+  function renderAssign(node: Node): Element {}
+
+  function renderIf(node: Node): Element {}
+
+  function renderExpression(node: Node): Element {
+    switch (node.type) {
+      case NodeType.ADD: {
+        break;
+      }
+      case NodeType.GREATER_THAN: {
+        break;
+      }
+    }
+  }
+
+  function renderAdd(node: Node): Element {}
+
+  function renderGreaterThan(node: Node): Element {}
+}
