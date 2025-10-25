@@ -40,28 +40,45 @@ enum K {
   C5 = 36,
 }
 
-const INT_BIT_DICT = [K.C4, K.D4, K.E4, K.F4, K.G4, K.A4, K.B4, K.C5];
+function byteToInt(b: number[]): number {
+  let val = 0;
+  for (let i = 7; i >= 0; i--) {
+    val = val * 2 + b[i];
+  }
+  return val;
+}
 
 enum Mode {
   TRAVERSE,
   COMMAND,
-  OPERATOR,
+  CONTROL_FLOW,
+  EXPRESSION,
   VAR_INPUT,
   INT_INPUT,
   STR_INPUT,
 }
 
 enum NodeType {
+  BLANK,
   PROGRAM,
   BLOCK,
   END,
   PRINT,
   ASSIGN,
-  ADD,
-  IF,
-  GREATER_THAN,
   VARIABLE,
   INT_CONST,
+  STR_CONST,
+  ADD,
+  SUBTRACT,
+  MULTIPLY,
+  DIVIDE,
+  EXPONENT,
+  IF,
+  GREATER_THAN,
+  LESS_THAN,
+  GREATER_THAN_EQ,
+  LESS_THAN_EQ,
+  EQUALS,
 }
 
 type Node = {
@@ -72,7 +89,7 @@ type Node = {
   children: Node[];
 };
 
-let mode = Mode.OPERATOR;
+let mode = Mode.CONTROL_FLOW;
 
 let currentNode: Node = {
   type: NodeType.PROGRAM,
@@ -86,7 +103,7 @@ let root = currentNode;
 
 function newNode(current: Node, type: NodeType, data?: any): Node {
   let child = {
-    type: type,
+    type,
     data,
     parent: current,
     index: current.children.length,
@@ -95,6 +112,47 @@ function newNode(current: Node, type: NodeType, data?: any): Node {
   current.children.push(child);
   return child;
 }
+
+function blankNode(parent: Node, index: number): Node {
+  return {
+    type: NodeType.BLANK,
+    data: undefined,
+    parent,
+    index,
+    children: [],
+  };
+}
+
+const BYTE_INT_MAP = new Map([
+  [K.C4, 0],
+  [K.D4, 1],
+  [K.E4, 2],
+  [K.F4, 3],
+  [K.G4, 4],
+  [K.A4, 5],
+  [K.B4, 6],
+  [K.C5, 7],
+]);
+const KEY_EXPRESSION_MAP = new Map([
+  [K.C3, NodeType.ADD],
+  [K.CC3, NodeType.SUBTRACT],
+  [K.D3, NodeType.MULTIPLY],
+  [K.DD3, NodeType.DIVIDE],
+  [K.E3, NodeType.EXPONENT],
+  [K.F3, NodeType.GREATER_THAN],
+  [K.FF3, NodeType.LESS_THAN],
+  [K.G3, NodeType.GREATER_THAN_EQ],
+  [K.GG3, NodeType.LESS_THAN_EQ],
+  [K.A3, NodeType.EQUALS],
+]);
+
+//K.B3, NodeType.PRINT
+//[K.G2, NodeType.ASSIGN]
+//IF
+//WHILE
+//FOR ?
+let byte: number[];
+let var_name: K[];
 
 function eventLoop(key: K): void {
   switch (key) {
@@ -106,10 +164,7 @@ function eventLoop(key: K): void {
       mode = Mode.COMMAND;
       break;
     case K.AA2:
-      mode = Mode.OPERATOR;
-      break;
-    case K.CC3:
-      mode = Mode.VAR_INPUT;
+      mode = Mode.CONTROL_FLOW;
       break;
     default:
       switch (mode) {
@@ -128,9 +183,9 @@ function eventLoop(key: K): void {
               }
               break;
             //move to right sibling
-            case K.C4:
             case K.E4:
             case K.G4:
+            case K.A4:
               if (
                 currentNode.parent !== undefined &&
                 currentNode.index !== currentNode.parent!.children.length - 1
@@ -148,63 +203,105 @@ function eventLoop(key: K): void {
                   currentNode.parent!.children[currentNode.index! - 1];
               }
               break;
-            //TODO
-
             //move right to next leaf
+            //case :
             //move left to next leaf
           }
           break;
         case Mode.COMMAND:
           //TODO
-
-          //save
-          //run
-          //what else
           switch (key) {
+            case K.F2:
+              save();
+              break;
+            case K.G2:
+              run();
+              break;
           }
           break;
-        case Mode.OPERATOR:
+        case Mode.CONTROL_FLOW:
+          //reserve C4-G4
           switch (key) {
-            case K.G2:
+            case K.C4:
               //assign
-              currentNode = newNode(currentNode, NodeType.ASSIGN);
+              mode = Mode.VAR_INPUT;
               break;
-            case K.F2:
-              //add
-              currentNode = newNode(currentNode, NodeType.ADD);
+            case K.D4:
+              //if
               break;
-            case K.G2:
+            case K.E4:
+              //while
+              break;
+            case K.F4:
+              //for
+              break;
+            case K.G4:
               //print
-              currentNode = newNode(currentNode, NodeType.PRINT);
               break;
+          }
+        case Mode.EXPRESSION:
+          if (KEY_EXPRESSION_MAP.has(key)) {
+            //add operator node B2-E3 + B3 reserved
+            currentNode = newNode(currentNode, KEY_OP_MAP.get(key)!);
+          } else {
+            //switch to input const or var name mode
+            switch (key) {
+              case K.G2:
+                var_name = [];
+                mode = Mode.VAR_INPUT;
+                break;
+              case K.A2:
+                mode = Mode.STR_INPUT;
+                break;
+              case K.B2:
+                byte = [0, 0, 0, 0, 0, 0, 0, 0];
+                mode = Mode.INT_INPUT;
+                break;
+            }
           }
           break;
         case Mode.VAR_INPUT:
-          //int or string input
-          switch (key) {
-            case K.D3:
-              mode = Mode.INT_INPUT;
-              break;
-            case K.C3:
-              mode = Mode.STR_INPUT;
-              break;
+          //enter var name
+          if (key === K.G2) {
+            //add var name to tree
+            let n: Node = newNode(currentNode, NodeType.VARIABLE);
+            n.index = currentNode.children.length;
+            n.data = var_name;
+            mode = Mode.OPERATOR;
+          } else {
+            //add note to name
+            var_name.push(key);
           }
           break;
         case Mode.INT_INPUT:
-          let byte = [0, 0, 0, 0, 0, 0, 0, 0];
-          if (INT_BIT_DICT.includes(key)) {
-            let i = INT_BIT_DICT.indexOf(key);
+          if (BYTE_INT_MAP.has(key)) {
+            //toggle bit
+            let i = BYTE_INT_MAP.get(key)!;
             byte[i] = 1 - byte[i];
           }
-          if (key == K.D3) {
-            //let n: Node = newNode(currentNode, NodeType.INT_CONST)
-            //n.index = currentNode.children.length
+          if (key === K.B2) {
+            //add in const int
+            let n: Node = newNode(currentNode, NodeType.INT_CONST);
+            n.index = currentNode.children.length;
+            n.data = byteToInt(byte);
+            mode = Mode.OPERATOR;
+          }
+        case Mode.STR_INPUT:
+          if (key === K.A2) {
+            //TODO
+            mode = Mode.OPERATOR;
           }
       }
       break;
   }
   renderTheProgram();
 }
+
+//TODO
+function save() {}
+
+//TODO
+function run() {}
 
 function onMIDIMessage(event: MIDIMessageEvent) {
   if (event.data!.length === 3 && event.data![0] === 144) {
