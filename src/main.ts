@@ -148,12 +148,6 @@ const KEY_EXPRESSION_MAP = new Map([
 //IF
 //WHILE
 //FOR ?
-<<<<<<< HEAD
-=======
-let byte: number[];
-let var_name: K[];
-
->>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
 function eventLoop(key: K): void {
   switch (key) {
     //change mode
@@ -226,10 +220,6 @@ function eventLoop(key: K): void {
           switch (key) {
             case K.C4:
               //assign
-<<<<<<< HEAD
-=======
-              mode = Mode.VAR_INPUT;
->>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
               break;
             case K.D4:
               //if
@@ -247,17 +237,12 @@ function eventLoop(key: K): void {
         case Mode.EXPRESSION:
           if (KEY_EXPRESSION_MAP.has(key)) {
             //add operator node B2-E3 + B3 reserved
-<<<<<<< HEAD
             currentNode = newNode(currentNode, KEY_EXPRESSION_MAP.get(key)!)
             currentNode.children = [blankNode(currentNode, 0), blankNode(currentNode, 1)]
-=======
-            currentNode = newNode(currentNode, KEY_OP_MAP.get(key)!);
->>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
           } else {
             //switch to input const or var name mode
             switch (key) {
               case K.G2:
-<<<<<<< HEAD
                 currentNode = newNode(currentNode, NodeType.VARIABLE, [])
                 mode = Mode.VAR_INPUT
                 break;
@@ -268,17 +253,6 @@ function eventLoop(key: K): void {
               case K.B2:
                 currentNode = newNode(currentNode, NodeType.INT_CONST, [0, 0, 0, 0, 0, 0, 0, 0])
                 mode = Mode.INT_INPUT
-=======
-                var_name = [];
-                mode = Mode.VAR_INPUT;
-                break;
-              case K.A2:
-                mode = Mode.STR_INPUT;
-                break;
-              case K.B2:
-                byte = [0, 0, 0, 0, 0, 0, 0, 0];
-                mode = Mode.INT_INPUT;
->>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
                 break;
             }
           }
@@ -287,13 +261,6 @@ function eventLoop(key: K): void {
           //enter var name
           if (key === K.G2) {
             //add var name to tree
-<<<<<<< HEAD
-            mode = Mode.STATEMENT
-            currentNode = currentNode.parent!
-          } else {
-            //add note to name
-            currentNode.data.push(key)
-=======
             let n: Node = newNode(currentNode, NodeType.VARIABLE);
             n.index = currentNode.children.length;
             n.data = var_name;
@@ -301,7 +268,6 @@ function eventLoop(key: K): void {
           } else {
             //add note to name
             var_name.push(key);
->>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
           }
           break;
         case Mode.INT_INPUT:
@@ -311,16 +277,8 @@ function eventLoop(key: K): void {
             currentNode.data[i] = 1 - currentNode.data[i];
           }
           if (key === K.B2) {
-<<<<<<< HEAD
             //finish const and leave
             mode = Mode.STATEMENT
-=======
-            //add in const int
-            let n: Node = newNode(currentNode, NodeType.INT_CONST);
-            n.index = currentNode.children.length;
-            n.data = byteToInt(byte);
-            mode = Mode.OPERATOR;
->>>>>>> 78c48cf08c0942f9d3880ede6a5d6f284bebd8e8
           }
         case Mode.STR_INPUT:
           if (key === K.A2) {
