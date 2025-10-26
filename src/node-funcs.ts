@@ -57,13 +57,21 @@ export const NODE_TYPE_OPERATORS_SYMBOLS_MAP = new Map([
   [NodeType.ADD, "+"],
   [NodeType.SUBTRACT, "-"],
   [NodeType.MULTIPLY, "*"],
-  [NodeType.EXPONENT, "^"],
+  [NodeType.EXPONENT, "%"],
   [NodeType.GREATER_THAN, ">"],
   [NodeType.LESS_THAN, "<"],
   [NodeType.GREATER_THAN_EQ, ">="],
   [NodeType.LESS_THAN_EQ, "<="],
   [NodeType.EQUALS, "=="],
 ]);
+
+export const NODE_TYPE_STATEMENTS = [
+  NodeType.PRINT,
+  NodeType.ASSIGN,
+  NodeType.IF,
+  NodeType.WHILE,
+  NodeType.FOR,
+];
 
 export function fillNode(current: Node, type: NodeType, data?: any) {
   current.type = type;
@@ -101,12 +109,24 @@ export function blankNode(parent: Node, index: number): Node {
 
 export function getNextLeaf(node: Node): Node {
   let n = node;
-  while (n.index === n.parent!.children.length - 1) {
+  while (n.parent !== undefined && n.index === n.parent!.children.length - 1) {
     n = n.parent!;
   }
   n = n.parent!.children[n.index + 1];
   while (n.children.length > 0) {
     n = n.children[0];
+  }
+  return n;
+}
+
+export function getPrevLeaf(node: Node): Node {
+  let n = node;
+  while (n.parent !== undefined && n.index === 0) {
+    n = n.parent!;
+  }
+  n = n.parent!.children[n.index - 1];
+  while (n.children.length > 0) {
+    n = n.children[n.children.length - 1];
   }
   return n;
 }

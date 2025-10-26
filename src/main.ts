@@ -6,9 +6,11 @@ import {
   fillNode,
   getNextLeaf,
   getNextBlankLeaf,
+  getPrevLeaf,
+  NODE_TYPE_STATEMENTS,
 } from "./node-funcs.ts";
 import { K, KEY_BIT_MAP, EDIT_KEY_NODE_TYPE_MAP } from "./key-consts.ts";
-import { renderProgram } from "./render.ts";
+import { draw, renderProgram } from "./render.ts";
 
 enum Mode {
   COMMAND = "COMMAND",
@@ -56,10 +58,19 @@ function eventLoop(key: K): void {
                 currentNode = currentNode.children[0];
               }
               break;
+            //move to left sibling
+            case K.D3:
+            case K.E3:
+            case K.F3:
+              if (currentNode.parent !== undefined && currentNode.index !== 0) {
+                currentNode =
+                  currentNode.parent!.children[currentNode.index! - 1];
+              }
+              break;
             //move to right sibling
+            case K.D4:
             case K.E4:
-            case K.G4:
-            case K.A4:
+            case K.F4:
               if (
                 currentNode.parent !== undefined &&
                 currentNode.index !== currentNode.parent!.children.length - 1
@@ -68,19 +79,18 @@ function eventLoop(key: K): void {
                   currentNode.parent!.children[currentNode.index! + 1];
               }
               break;
-            //move to left sibling
-            case K.E3:
+            //move to prev leaf
             case K.G3:
             case K.A3:
-              if (currentNode.parent !== undefined && currentNode.index !== 0) {
-                currentNode =
-                  currentNode.parent!.children[currentNode.index! - 1];
-              }
+            case K.B3:
+              currentNode = getPrevLeaf(currentNode);
               break;
-            //TODO
-            // move right to next leaf
-            //case :
-            //move left to next leaf
+            //move to next leaf
+            case K.G4:
+            case K.A4:
+            case K.B4:
+              currentNode = getNextLeaf(currentNode);
+              break;
             case K.F2:
               save();
               break;
@@ -92,23 +102,21 @@ function eventLoop(key: K): void {
         case Mode.EDIT:
           //uses C3-G3 + C4 - A4 for typing operators
           if (EDIT_KEY_NODE_TYPE_MAP.has(key)) {
-            console.log("---");
-            console.log(currentNode);
-            console.log(currentNode.parent);
+            let new_type = EDIT_KEY_NODE_TYPE_MAP.get(key);
             if (currentNode.parent!.type === NodeType.BLOCK) {
-              currentNode.parent!.children.push(
-                blankNode(
-                  currentNode.parent!,
-                  currentNode.parent!.children.length
-                )
-              );
-            }
-            fillNode(currentNode, EDIT_KEY_NODE_TYPE_MAP.get(key)!);
-            currentNode = currentNode.children[0];
-            if (currentNode.parent!.type === NodeType.ASSIGN) {
-              currentNode.type = NodeType.VARIABLE;
-              currentNode.data = [];
-              mode = Mode.VAR_INPUT;
+              if (NODE_TYPE_STATEMENTS.includes(new_type!)) {
+                currentNode.parent!.children.push(
+                  blankNode(
+                    currentNode.parent!,
+                    currentNode.parent!.children.length
+                  )
+                );
+                fillNode(currentNode, new_type!);
+                currentNode = currentNode.children[0];
+              }
+            } else {
+              fillNode(currentNode, new_type!);
+              currentNode = currentNode.children[0];
             }
           } else {
             //switch to input const or var name mode
@@ -211,6 +219,12 @@ async function main() {
   renderTheProgram();
 
   console.log(currentNode);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === " ") {
+      draw();
+    }
+  });
 }
 
 main();
