@@ -54,8 +54,8 @@ export const NODE_TYPE_CHILD_COUNT_MAP = new Map([
 ]);
 
 export function fillNode(current: Node, type: NodeType, data?: any) {
-  current.type;
-  current.data;
+  current.type = type;
+  current.data = data;
   for (let i = 0; i < NODE_TYPE_CHILD_COUNT_MAP.get(type)!; i++) {
     current.children.push(blankNode(current, i));
   }
