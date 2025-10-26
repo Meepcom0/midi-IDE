@@ -1,4 +1,4 @@
-import { Node, NodeType } from './node-funcs.ts'
+import { type Node, NodeType } from "./node-funcs.ts";
 
 function byteToInt(b: number[]): number {
   let val = 0;
@@ -19,10 +19,9 @@ function span(content: string): Element {
   return element;
 }
 
-function invertIfMatches(element: HTMLElement, node: Node, current: Node){ 
-    if (node === current) {
-        
-    }
+function invertIfMatches(element: HTMLElement, node: Node, current: Node) {
+  if (node === current) {
+  }
 }
 
 export function renderProgram(node: Node, currentNode: Node): Element {
@@ -135,7 +134,7 @@ export function renderProgram(node: Node, currentNode: Node): Element {
   }
 
   function renderBlank(node: Node): Element {
-    return span("(...)")
+    return span("(...)");
   }
 
   return renderBlock(node.children[0]);

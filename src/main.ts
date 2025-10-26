@@ -1,29 +1,35 @@
 import "./style.css";
-import {Node, NodeType, blankNode, fillNode, getNextLeaf, getNextBlankLeaf} from "./node-funcs.ts";
-import {K, KEY_BIT_MAP, EDIT_KEY_NODE_TYPE_MAP} from "./key-consts.ts"
+import {
+  type Node,
+  NodeType,
+  blankNode,
+  fillNode,
+  getNextLeaf,
+  getNextBlankLeaf,
+} from "./node-funcs.ts";
+import { K, KEY_BIT_MAP, EDIT_KEY_NODE_TYPE_MAP } from "./key-consts.ts";
 import { renderProgram } from "./render.ts";
 
 enum Mode {
-  COMMAND,
-  EDIT,
-  VAR_INPUT,
-  INT_INPUT,
-  STR_INPUT,
+  COMMAND = "COMMAND",
+  EDIT = "EDIT",
+  VAR_INPUT = "VAR_INPUT",
+  INT_INPUT = "INT_INPUT",
+  STR_INPUT = "STR_INPUT",
 }
 
 let mode = Mode.EDIT;
 
-let currentNode: Node = {
+let root: Node = {
   type: NodeType.BLOCK,
   data: undefined,
   parent: undefined,
   index: 0,
   children: [],
-}
+};
 
-let root = currentNode;
-
-currentNode = blankNode(currentNode, 0)
+let currentNode = blankNode(root, 0);
+root.children.push(currentNode);
 
 function eventLoop(key: K): void {
   switch (key) {
@@ -86,25 +92,25 @@ function eventLoop(key: K): void {
         case Mode.EDIT:
           //uses C3-G3 + C4 - A4 for typing operators
           if (EDIT_KEY_NODE_TYPE_MAP.has(key)) {
-            fillNode(currentNode, EDIT_KEY_NODE_TYPE_MAP.get(key)!)
-            currentNode = currentNode.children[0]
+            fillNode(currentNode, EDIT_KEY_NODE_TYPE_MAP.get(key)!);
+            currentNode = currentNode.children[0];
           } else {
             //switch to input const or var name mode
             switch (key) {
               case K.A3:
-                currentNode.type = NodeType.VARIABLE
-                currentNode.data = []
-                mode = Mode.VAR_INPUT
+                currentNode.type = NodeType.VARIABLE;
+                currentNode.data = [];
+                mode = Mode.VAR_INPUT;
                 break;
               case K.AA3:
-                currentNode.type = NodeType.STR_CONST
-                currentNode.data = []
-                mode = Mode.STR_INPUT
+                currentNode.type = NodeType.STR_CONST;
+                currentNode.data = [];
+                mode = Mode.STR_INPUT;
                 break;
               case K.B3:
-                currentNode.type = NodeType.INT_CONST
-                currentNode.data = [0, 0, 0, 0, 0, 0, 0, 0]
-                mode = Mode.INT_INPUT
+                currentNode.type = NodeType.INT_CONST;
+                currentNode.data = [0, 0, 0, 0, 0, 0, 0, 0];
+                mode = Mode.INT_INPUT;
                 break;
             }
           }
@@ -113,8 +119,8 @@ function eventLoop(key: K): void {
           //enter var name
           if (key === K.G2) {
             //finish var name and continue
-            mode = Mode.EDIT
-            currentNode = getNextBlankLeaf(currentNode)
+            mode = Mode.EDIT;
+            currentNode = getNextBlankLeaf(currentNode);
           } else {
             //add note to name
             currentNode.data.push(key);
@@ -123,8 +129,8 @@ function eventLoop(key: K): void {
         case Mode.INT_INPUT:
           if (key === K.B2) {
             //finish const and continue
-            mode = Mode.EDIT
-            currentNode = getNextBlankLeaf(currentNode) 
+            mode = Mode.EDIT;
+            currentNode = getNextBlankLeaf(currentNode);
           } else if (KEY_BIT_MAP.has(key)) {
             //toggle bit
             let i = KEY_BIT_MAP.get(key)!;
@@ -139,6 +145,9 @@ function eventLoop(key: K): void {
       break;
   }
   renderTheProgram();
+  console.log(mode);
+  console.log(root);
+  console.log(currentNode);
 }
 
 //TODO

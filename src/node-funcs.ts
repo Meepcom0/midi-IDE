@@ -7,27 +7,27 @@ export type Node = {
 };
 
 export enum NodeType {
-  BLANK,
-  BLOCK,
-  END,
-  PRINT,
-  ASSIGN,
-  IF,
-  WHILE,
-  FOR,
-  VARIABLE,
-  INT_CONST,
-  STR_CONST,
-  ADD,
-  SUBTRACT,
-  MULTIPLY,
-  DIVIDE,
-  EXPONENT,
-  GREATER_THAN,
-  LESS_THAN,
-  GREATER_THAN_EQ,
-  LESS_THAN_EQ,
-  EQUALS,
+  BLANK = "BLANK",
+  BLOCK = "BLOCK",
+  END = "END",
+  PRINT = "PRINT",
+  ASSIGN = "ASSIGN",
+  IF = "IF",
+  WHILE = "WHILE",
+  FOR = "FOR",
+  VARIABLE = "VARIABLE",
+  INT_CONST = "INT_CONST",
+  STR_CONST = "STR_CONST",
+  ADD = "ADD",
+  SUBTRACT = "SUBTRACT",
+  MULTIPLY = "MULTIPLY",
+  DIVIDE = "DIVIDE",
+  EXPONENT = "EXPONENT",
+  GREATER_THAN = "GREATER_THAN",
+  LESS_THAN = "LESS_THAN",
+  GREATER_THAN_EQ = "GREATER_THAN_EQ",
+  LESS_THAN_EQ = "LESS_THAN_EQ",
+  EQUALS = "EQUALS",
 }
 
 export const NODE_TYPE_CHILD_COUNT_MAP = new Map([
@@ -50,14 +50,14 @@ export const NODE_TYPE_CHILD_COUNT_MAP = new Map([
   [NodeType.LESS_THAN, 2],
   [NodeType.GREATER_THAN_EQ, 2],
   [NodeType.LESS_THAN_EQ, 2],
-  [NodeType.EQUALS, 2]
-])
+  [NodeType.EQUALS, 2],
+]);
 
 export function fillNode(current: Node, type: NodeType, data?: any) {
-  current.type
-  current.data
+  current.type;
+  current.data;
   for (let i = 0; i < NODE_TYPE_CHILD_COUNT_MAP.get(type)!; i++) {
-    current.children.push(blankNode(current, i))
+    current.children.push(blankNode(current, i));
   }
 }
 
@@ -76,18 +76,18 @@ export function getNextLeaf(node: Node): Node {
   while (!(n.index + 1 < n.parent!.children.length)) {
     n = n.parent!;
   }
-  let upRight = n.parent!.children[n.index + 1]
-  let m = upRight
+  let upRight = n.parent!.children[n.index + 1];
+  let m = upRight;
   while (m.children.length > 0) {
-    m = m.children[0]
+    m = m.children[0];
   }
-  return m
+  return m;
 }
 
 export function getNextBlankLeaf(node: Node): Node {
   let n = node;
   while (n.type === NodeType.BLANK) {
-    n = getNextLeaf(n)
+    n = getNextLeaf(n);
   }
-  return n
+  return n;
 }
