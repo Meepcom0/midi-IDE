@@ -87,6 +87,9 @@ function eventLoop(key: K): void {
           //uses C3-G3 + C4 - A4 for typing operators
           if (EDIT_KEY_NODE_TYPE_MAP.has(key)) {
             fillNode(currentNode, EDIT_KEY_NODE_TYPE_MAP.get(key)!)
+            if (currentNode.type === NodeType.ASSIGN) {
+              mode = Mode.VAR_INPUT
+            }
             currentNode = currentNode.children[0]
           } else {
             //switch to input const or var name mode
