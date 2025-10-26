@@ -53,6 +53,18 @@ export const NODE_TYPE_CHILD_COUNT_MAP = new Map([
   [NodeType.EQUALS, 2],
 ]);
 
+export const NODE_TYPE_OPERATORS_SYMBOLS_MAP = new Map([
+  [NodeType.ADD, "+"],
+  [NodeType.SUBTRACT, "-"],
+  [NodeType.MULTIPLY, "*"],
+  [NodeType.EXPONENT, "^"],
+  [NodeType.GREATER_THAN, ">"],
+  [NodeType.LESS_THAN, "<"],
+  [NodeType.GREATER_THAN_EQ, ">="],
+  [NodeType.LESS_THAN_EQ, "<="],
+  [NodeType.EQUALS, "=="],
+]);
+
 export function fillNode(current: Node, type: NodeType, data?: any) {
   current.type = type;
   current.data = data;
@@ -62,17 +74,17 @@ export function fillNode(current: Node, type: NodeType, data?: any) {
   switch (type) {
     case NodeType.IF:
       current.children[1].type = NodeType.BLOCK;
-      current.children[1].children.push(blankNode(current, 1));
+      current.children[1].children.push(blankNode(current.children[1], 0));
       current.children[2].type = NodeType.BLOCK;
-      current.children[2].children.push(blankNode(current, 1));
+      current.children[2].children.push(blankNode(current.children[2], 0));
       break;
     case NodeType.WHILE:
       current.children[1].type = NodeType.BLOCK;
-      current.children[1].children.push(blankNode(current, 1));
+      current.children[1].children.push(blankNode(current.children[1], 0));
       break;
     case NodeType.FOR:
       current.children[3].type = NodeType.BLOCK;
-      current.children[3].children.push(blankNode(current, 1));
+      current.children[3].children.push(blankNode(current.children[3], 0));
       break;
   }
 }

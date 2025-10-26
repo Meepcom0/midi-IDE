@@ -1,4 +1,8 @@
-import { type Node, NodeType } from "./node-funcs.ts";
+import {
+  type Node,
+  NODE_TYPE_OPERATORS_SYMBOLS_MAP,
+  NodeType,
+} from "./node-funcs.ts";
 
 function byteToInt(b: number[]): number {
   let val = 0;
@@ -37,22 +41,33 @@ export function renderProgram(node: Node, currentNode: Node): Element {
   }
 
   function renderStatement(statement: Node): Element {
+    let element: Element;
     switch (statement.type) {
       case NodeType.BLANK: {
-        return renderBlank(statement);
+        element = renderBlank(statement);
+        break;
       }
       case NodeType.IF: {
-        return renderIf(statement);
+        element = renderIf(statement);
+        break;
       }
       case NodeType.ASSIGN: {
-        return renderAssign(statement);
+        element = renderAssign(statement);
+        break;
       }
       case NodeType.PRINT: {
-        return renderPrint(statement);
+        element = renderPrint(statement);
+        break;
       }
       default:
         throw new Error();
     }
+    if (statement === currentNode) {
+      (element as HTMLElement).style.filter = "invert(1)";
+      (element as HTMLElement).style.backgroundColor = "black";
+    }
+
+    return element;
   }
 
   function renderPrint(node: Node): Element {
@@ -94,34 +109,46 @@ export function renderProgram(node: Node, currentNode: Node): Element {
   }
 
   function renderExpression(node: Node): Element {
-    switch (node.type) {
-      case NodeType.BLANK: {
-        return renderBlank(node);
+    let expression: Element;
+    if (NODE_TYPE_OPERATORS_SYMBOLS_MAP.has(node.type)) {
+      expression = renderOp(node);
+    } else {
+      switch (node.type) {
+        case NodeType.BLANK: {
+          expression = renderBlank(node);
+          break;
+        }
+        case NodeType.INT_CONST: {
+          expression = renderIntConst(node);
+          break;
+        }
+        case NodeType.VARIABLE: {
+          expression = renderVariable(node);
+          break;
+        }
+        case NodeType.STR_CONST: {
+          expression = renderString(node);
+          break;
+        }
+        default:
+          throw new Error();
       }
-      case NodeType.ADD: {
-        return renderAdd(node);
+      if (node === currentNode) {
+        (expression as HTMLElement).style.filter = "invert(1)";
+        (expression as HTMLElement).style.backgroundColor = "black";
       }
-      case NodeType.INT_CONST: {
-        return renderIntConst(node);
-      }
-      case NodeType.VARIABLE: {
-        return renderVariable(node);
-      }
-      case NodeType.ADD: {
-        return renderAdd(node);
-      }
-      default:
-        throw new Error();
     }
+    return expression;
   }
 
-  function renderAdd(node: Node): Element {
+  function renderOp(node: Node): Element {
+    let op_symbol = NODE_TYPE_OPERATORS_SYMBOLS_MAP.get(node.type);
     let left = renderExpression(node.children[0]);
     let right = renderExpression(node.children[1]);
     let element = span("");
     element.appendChild(span("("));
     element.appendChild(left);
-    element.appendChild(span(" + "));
+    element.appendChild(span(" " + op_symbol + " "));
     element.appendChild(right);
     element.appendChild(span(")"));
     return element;
@@ -134,6 +161,10 @@ export function renderProgram(node: Node, currentNode: Node): Element {
   }
 
   function renderVariable(node: Node): Element {
+    return span(`[${(node.data as number[]).join(" ")}]`);
+  }
+
+  function renderString(node: Node): Element {
     return span(`[${(node.data as number[]).join(" ")}]`);
   }
 

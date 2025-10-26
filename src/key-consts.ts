@@ -38,6 +38,18 @@ export enum K {
   AA4 = 34,
   B4 = 35,
   C5 = 36,
+  CC5 = 37,
+  D5 = 38,
+  DD5 = 39,
+  E5 = 40,
+  F5 = 41,
+  FF5 = 42,
+  G5 = 43,
+  GG5 = 44,
+  A5 = 45,
+  AA5 = 46,
+  B5 = 47,
+  C6 = 48,
 }
 
 export const KEY_BIT_MAP = new Map([

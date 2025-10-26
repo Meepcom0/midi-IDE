@@ -92,6 +92,9 @@ function eventLoop(key: K): void {
         case Mode.EDIT:
           //uses C3-G3 + C4 - A4 for typing operators
           if (EDIT_KEY_NODE_TYPE_MAP.has(key)) {
+            console.log("---");
+            console.log(currentNode);
+            console.log(currentNode.parent);
             if (currentNode.parent!.type === NodeType.BLOCK) {
               currentNode.parent!.children.push(
                 blankNode(
@@ -152,9 +155,14 @@ function eventLoop(key: K): void {
           break;
         case Mode.STR_INPUT:
           if (key === K.AA3) {
-            //TODO
+            //finish var name and continue
             mode = Mode.EDIT;
+            currentNode = getNextBlankLeaf(currentNode);
+          } else {
+            //add note to name
+            currentNode.data.push(key);
           }
+          break;
       }
       break;
   }
