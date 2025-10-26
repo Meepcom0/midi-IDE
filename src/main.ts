@@ -98,7 +98,10 @@ function eventLoop(key: K): void {
               currentNode.type = NodeType.VARIABLE;
               currentNode.data = [];
               mode = Mode.VAR_INPUT;
+            } else if (currentNode.parent!.type === NodeType.BLOCK) {
+              currentNode.parent!.children.push(blankNode(currentNode.parent!, currentNode.parent!.children.length))
             }
+
           } else {
             //switch to input const or var name mode
             switch (key) {
