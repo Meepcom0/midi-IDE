@@ -59,6 +59,22 @@ export function fillNode(current: Node, type: NodeType, data?: any) {
   for (let i = 0; i < NODE_TYPE_CHILD_COUNT_MAP.get(type)!; i++) {
     current.children.push(blankNode(current, i));
   }
+  switch (type) {
+    case NodeType.IF:
+      current.children[1].type = NodeType.BLOCK;
+      current.children[1].children.push(blankNode(current, 1));
+      current.children[2].type = NodeType.BLOCK;
+      current.children[2].children.push(blankNode(current, 1));
+      break;
+    case NodeType.WHILE:
+      current.children[1].type = NodeType.BLOCK;
+      current.children[1].children.push(blankNode(current, 1));
+      break;
+    case NodeType.FOR:
+      current.children[3].type = NodeType.BLOCK;
+      current.children[3].children.push(blankNode(current, 1));
+      break;
+  }
 }
 
 export function blankNode(parent: Node, index: number): Node {

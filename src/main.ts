@@ -92,16 +92,21 @@ function eventLoop(key: K): void {
         case Mode.EDIT:
           //uses C3-G3 + C4 - A4 for typing operators
           if (EDIT_KEY_NODE_TYPE_MAP.has(key)) {
+            if (currentNode.parent!.type === NodeType.BLOCK) {
+              currentNode.parent!.children.push(
+                blankNode(
+                  currentNode.parent!,
+                  currentNode.parent!.children.length
+                )
+              );
+            }
             fillNode(currentNode, EDIT_KEY_NODE_TYPE_MAP.get(key)!);
             currentNode = currentNode.children[0];
             if (currentNode.parent!.type === NodeType.ASSIGN) {
               currentNode.type = NodeType.VARIABLE;
               currentNode.data = [];
               mode = Mode.VAR_INPUT;
-            } else if (currentNode.parent!.type === NodeType.BLOCK) {
-              currentNode.parent!.children.push(blankNode(currentNode.parent!, currentNode.parent!.children.length))
             }
-
           } else {
             //switch to input const or var name mode
             switch (key) {
@@ -144,6 +149,7 @@ function eventLoop(key: K): void {
             let i = KEY_BIT_MAP.get(key)!;
             currentNode.data[i] = 1 - currentNode.data[i];
           }
+          break;
         case Mode.STR_INPUT:
           if (key === K.AA3) {
             //TODO

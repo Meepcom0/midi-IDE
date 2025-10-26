@@ -134,7 +134,7 @@ export function renderProgram(node: Node, currentNode: Node): Element {
   }
 
   function renderVariable(node: Node): Element {
-    return span(node.data as string);
+    return span(`[${(node.data as number[]).join(" ")}]`);
   }
 
   function renderBlank(node: Node): Element {
