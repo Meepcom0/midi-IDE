@@ -1,52 +1,7 @@
 import "./style.css";
-
-enum K {
-  C2 = 0,
-  CC2 = 1,
-  D2 = 2,
-  DD2 = 3,
-  E2 = 4,
-  F2 = 5,
-  FF2 = 6,
-  G2 = 7,
-  GG2 = 8,
-  A2 = 9,
-  AA2 = 10,
-  B2 = 11,
-  C3 = 12,
-  CC3 = 13,
-  D3 = 14,
-  DD3 = 15,
-  E3 = 16,
-  F3 = 17,
-  FF3 = 18,
-  G3 = 19,
-  GG3 = 20,
-  A3 = 21,
-  AA3 = 22,
-  B3 = 23,
-  C4 = 24,
-  CC4 = 25,
-  D4 = 26,
-  DD4 = 27,
-  E4 = 28,
-  F4 = 29,
-  FF4 = 30,
-  G4 = 31,
-  GG4 = 32,
-  A4 = 33,
-  AA4 = 34,
-  B4 = 35,
-  C5 = 36,
-}
-
-function byteToInt(b: number[]): number {
-  let val = 0;
-  for (let i = 7; i >= 0; i--) {
-    val = val * 2 + b[i];
-  }
-  return val;
-}
+import {Node, NodeType, blankNode, fillNode, getNextLeaf, getNextBlankLeaf} from "./node-funcs.ts";
+import {K, KEY_BIT_MAP, EDIT_KEY_NODE_TYPE_MAP} from "./key-consts.ts"
+import { renderProgram } from "./render.ts";
 
 enum Mode {
   COMMAND,
@@ -56,36 +11,6 @@ enum Mode {
   STR_INPUT,
 }
 
-enum NodeType {
-  BLANK,
-  BLOCK,
-  END,
-  PRINT,
-  ASSIGN,
-  VARIABLE,
-  INT_CONST,
-  STR_CONST,
-  ADD,
-  SUBTRACT,
-  MULTIPLY,
-  DIVIDE,
-  EXPONENT,
-  IF,
-  GREATER_THAN,
-  LESS_THAN,
-  GREATER_THAN_EQ,
-  LESS_THAN_EQ,
-  EQUALS,
-}
-
-type Node = {
-  type: NodeType;
-  parent: Node | undefined;
-  index: number; // defined such that this == this.parent[index]
-  data: any;
-  children: Node[];
-};
-
 let mode = Mode.EDIT;
 
 let currentNode: Node = {
@@ -94,75 +19,24 @@ let currentNode: Node = {
   parent: undefined,
   index: 0,
   children: [],
-};
+}
 
 let root = currentNode;
 
-function newNode(current: Node, type: NodeType, data?: any): Node {
-  let child = {
-    type,
-    data,
-    parent: current,
-    index: current.children.length,
-    children: [],
-  };
-  current.children.push(child);
-  return child;
-}
+currentNode = blankNode(currentNode, 0)
 
-function blankNode(parent: Node, index: number): Node {
-  return {
-    type: NodeType.BLANK,
-    data: undefined,
-    parent,
-    index,
-    children: [],
-  };
-}
-
-const BYTE_INT_MAP = new Map([
-  [K.C4, 0],
-  [K.D4, 1],
-  [K.E4, 2],
-  [K.F4, 3],
-  [K.G4, 4],
-  [K.A4, 5],
-  [K.B4, 6],
-  [K.C5, 7],
-]);
-const KEY_EXPRESSION_MAP = new Map([
-  [K.C3, NodeType.ADD],
-  [K.CC3, NodeType.SUBTRACT],
-  [K.D3, NodeType.MULTIPLY],
-  [K.DD3, NodeType.DIVIDE],
-  [K.E3, NodeType.EXPONENT],
-  [K.F3, NodeType.GREATER_THAN],
-  [K.FF3, NodeType.LESS_THAN],
-  [K.G3, NodeType.GREATER_THAN_EQ],
-  [K.GG3, NodeType.LESS_THAN_EQ],
-  [K.A3, NodeType.EQUALS],
-]);
-
-//K.B3, NodeType.PRINT
-//[K.G2, NodeType.ASSIGN]
-//IF
-//WHILE
-//FOR ?
 function eventLoop(key: K): void {
   switch (key) {
     //change mode
-    case K.FF2:
-      mode = Mode.TRAVERSE;
-      break;
     case K.GG2:
       mode = Mode.COMMAND;
       break;
     case K.AA2:
-      mode = Mode.STATEMENT;
+      mode = Mode.EDIT;
       break;
     default:
       switch (mode) {
-        case Mode.TRAVERSE:
+        case Mode.COMMAND:
           switch (key) {
             //move up tree
             case K.C5:
@@ -197,14 +71,10 @@ function eventLoop(key: K): void {
                   currentNode.parent!.children[currentNode.index! - 1];
               }
               break;
-            //move right to next leaf
+            //TODO
+            // move right to next leaf
             //case :
             //move left to next leaf
-          }
-          break;
-        case Mode.COMMAND:
-          //TODO
-          switch (key) {
             case K.F2:
               save();
               break;
@@ -213,45 +83,27 @@ function eventLoop(key: K): void {
               break;
           }
           break;
-        case Mode.STATEMENT:
-          //TODO DETECT IF CURRENT NODE IS ALREADY STATEMENT
-
-          //reserve C4-G4
-          switch (key) {
-            case K.C4:
-              //assign
-              break;
-            case K.D4:
-              //if
-              break;
-            case K.E4:
-              //while
-              break;
-            case K.F4:
-              //for
-              break;
-            case K.G4:
-              //print
-              break;
-          }
-        case Mode.EXPRESSION:
-          if (KEY_EXPRESSION_MAP.has(key)) {
-            //add operator node B2-E3 + B3 reserved
-            currentNode = newNode(currentNode, KEY_EXPRESSION_MAP.get(key)!)
-            currentNode.children = [blankNode(currentNode, 0), blankNode(currentNode, 1)]
+        case Mode.EDIT:
+          //uses C3-G3 + C4 - A4 for typing operators
+          if (EDIT_KEY_NODE_TYPE_MAP.has(key)) {
+            fillNode(currentNode, EDIT_KEY_NODE_TYPE_MAP.get(key)!)
+            currentNode = currentNode.children[0]
           } else {
             //switch to input const or var name mode
             switch (key) {
-              case K.G2:
-                currentNode = newNode(currentNode, NodeType.VARIABLE, [])
+              case K.A3:
+                currentNode.type = NodeType.VARIABLE
+                currentNode.data = []
                 mode = Mode.VAR_INPUT
                 break;
-              case K.A2:
-                currentNode = newNode(currentNode, NodeType.STR_CONST, "")
+              case K.AA3:
+                currentNode.type = NodeType.STR_CONST
+                currentNode.data = []
                 mode = Mode.STR_INPUT
                 break;
-              case K.B2:
-                currentNode = newNode(currentNode, NodeType.INT_CONST, [0, 0, 0, 0, 0, 0, 0, 0])
+              case K.B3:
+                currentNode.type = NodeType.INT_CONST
+                currentNode.data = [0, 0, 0, 0, 0, 0, 0, 0]
                 mode = Mode.INT_INPUT
                 break;
             }
@@ -260,30 +112,28 @@ function eventLoop(key: K): void {
         case Mode.VAR_INPUT:
           //enter var name
           if (key === K.G2) {
-            //add var name to tree
-            let n: Node = newNode(currentNode, NodeType.VARIABLE);
-            n.index = currentNode.children.length;
-            n.data = var_name;
-            mode = Mode.OPERATOR;
+            //finish var name and continue
+            mode = Mode.EDIT
+            currentNode = getNextBlankLeaf(currentNode)
           } else {
             //add note to name
-            var_name.push(key);
+            currentNode.data.push(key);
           }
           break;
         case Mode.INT_INPUT:
-          if (BYTE_INT_MAP.has(key)) {
-            //toggle bit
-            let i = BYTE_INT_MAP.get(key)!;
-            currentNode.data[i] = 1 - currentNode.data[i];
-          }
           if (key === K.B2) {
-            //finish const and leave
-            mode = Mode.STATEMENT
+            //finish const and continue
+            mode = Mode.EDIT
+            currentNode = getNextBlankLeaf(currentNode) 
+          } else if (KEY_BIT_MAP.has(key)) {
+            //toggle bit
+            let i = KEY_BIT_MAP.get(key)!;
+            currentNode.data[i] = 1 - currentNode.data[i];
           }
         case Mode.STR_INPUT:
           if (key === K.A2) {
             //TODO
-            mode = Mode.OPERATOR;
+            mode = Mode.EDIT;
           }
       }
       break;
@@ -317,156 +167,15 @@ function startLoggingMIDIInput(midiAccess: MIDIAccess) {
   });
 }
 
-function div(): Element {
-  const element = document.createElement("div");
-  return element;
-}
-
-function span(content: string): Element {
-  const element = document.createElement("span");
-  element.innerHTML = content;
-  return element;
-}
-
-function renderProgram(node: Node): Element {
-  function renderBlock(node: Node): Element {
-    const blockElement = document.createElement("div");
-    for (const statement of node.children) {
-      let statementElement = renderStatement(statement);
-      (statementElement as HTMLDivElement).style.transform =
-        "translate(12px, 0px)";
-      blockElement.appendChild(statementElement);
-    }
-    return blockElement;
-  }
-
-  function renderStatement(statement: Node): Element {
-    switch (statement.type) {
-      case NodeType.IF: {
-        return renderIf(statement);
-      }
-      case NodeType.ASSIGN: {
-        return renderAssign(statement);
-      }
-      case NodeType.PRINT: {
-        return renderPrint(statement);
-      }
-      default:
-        throw new Error();
-    }
-  }
-
-  function renderPrint(node: Node): Element {
-    let element = document.createElement("div");
-    let print = document.createElement("span");
-    print.innerHTML = "print";
-
-    element.appendChild(print);
-    element.appendChild(renderExpression(node));
-
-    return element;
-  }
-
-  function renderAssign(node: Node): Element {
-    let element = div();
-    element.appendChild(renderVariable(node.children[0]));
-    element.append(span(" = "));
-    element.appendChild(renderExpression(node.children[1]));
-    return element;
-  }
-
-  function renderIf(node: Node): Element {
-    let element = div();
-
-    let ifHeader = div();
-    ifHeader.appendChild(span("if "));
-    ifHeader.appendChild(renderExpression(node.children[0]) /* condition */);
-    element.appendChild(ifHeader);
-
-    element.appendChild(renderBlock(node.children[1]));
-
-    let elseHeader = div();
-    elseHeader.appendChild(span("else"));
-    element.appendChild(elseHeader);
-
-    element.appendChild(renderBlock(node.children[2]));
-
-    return element;
-  }
-
-  function renderExpression(node: Node): Element {
-    switch (node.type) {
-      case NodeType.ADD: {
-        return renderAdd(node);
-      }
-      case NodeType.INT_CONST: {
-        return renderIntConst(node);
-      }
-      case NodeType.VARIABLE: {
-        return renderVariable(node);
-      }
-      case NodeType.ADD: {
-        return renderAdd(node);
-      }
-      // case NodeType.GREATER_THAN: {
-      //   return renderGreaterThan(node);
-      // }
-      default:
-        throw new Error();
-    }
-  }
-
-  function renderAdd(node: Node): Element {
-    let left = renderExpression(node.children[0]);
-    let right = renderExpression(node.children[1]);
-    let element = span("");
-    element.appendChild(left);
-    element.appendChild(span(" + "));
-    element.appendChild(right);
-    return element;
-  }
-
-  function renderIntConst(node: Node): Element {
-    return span((node.data as number).toString());
-  }
-
-  function renderVariable(node: Node): Element {
-    return span(node.data as string);
-  }
-
-  // function renderGreaterThan(node: Node): Element {}
-
-  return renderBlock(node.children[0]);
-}
-
 function renderTheProgram() {
   document.body.innerHTML = "";
-  document.body.appendChild(renderProgram(root));
+  document.body.appendChild(renderProgram(root, currentNode));
 }
 
 async function main() {
   await navigator.permissions.query({ name: "midi" });
   let midiAccess = await navigator.requestMIDIAccess();
   startLoggingMIDIInput(midiAccess);
-
-  currentNode = newNode(currentNode, NodeType.BLOCK);
-  currentNode = newNode(currentNode, NodeType.IF);
-  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
-  currentNode = currentNode.parent!;
-  currentNode = newNode(currentNode, NodeType.BLOCK);
-  currentNode = newNode(currentNode, NodeType.ASSIGN);
-  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
-  currentNode = currentNode.parent!;
-  currentNode = newNode(currentNode, NodeType.VARIABLE, "y");
-  currentNode = currentNode.parent!;
-  currentNode = currentNode.parent!;
-  currentNode = currentNode.parent!;
-  currentNode = newNode(currentNode, NodeType.BLOCK);
-  currentNode = newNode(currentNode, NodeType.ASSIGN);
-  currentNode = newNode(currentNode, NodeType.VARIABLE, "x");
-  currentNode = currentNode.parent!;
-  currentNode = newNode(currentNode, NodeType.VARIABLE, "y");
-  currentNode = root;
 
   renderTheProgram();
 
