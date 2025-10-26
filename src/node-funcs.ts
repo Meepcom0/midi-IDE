@@ -73,20 +73,19 @@ export function blankNode(parent: Node, index: number): Node {
 
 export function getNextLeaf(node: Node): Node {
   let n = node;
-  while (!(n.index + 1 < n.parent!.children.length)) {
+  while (n.index === n.parent!.children.length - 1) {
     n = n.parent!;
   }
-  let upRight = n.parent!.children[n.index + 1];
-  let m = upRight;
-  while (m.children.length > 0) {
-    m = m.children[0];
+  n = n.parent!.children[n.index + 1];
+  while (n.children.length > 0) {
+    n = n.children[0];
   }
-  return m;
+  return n;
 }
 
 export function getNextBlankLeaf(node: Node): Node {
   let n = node;
-  while (n.type === NodeType.BLANK) {
+  while (n.type !== NodeType.BLANK) {
     n = getNextLeaf(n);
   }
   return n;

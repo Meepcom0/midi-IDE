@@ -119,14 +119,18 @@ export function renderProgram(node: Node, currentNode: Node): Element {
     let left = renderExpression(node.children[0]);
     let right = renderExpression(node.children[1]);
     let element = span("");
+    element.appendChild(span("("));
     element.appendChild(left);
     element.appendChild(span(" + "));
     element.appendChild(right);
+    element.appendChild(span(")"));
     return element;
   }
 
   function renderIntConst(node: Node): Element {
-    return span((node.data as number).toString());
+    return span(
+      (node.data as number[]).map((x) => (x === 0 ? "■" : "□")).join("")
+    );
   }
 
   function renderVariable(node: Node): Element {
@@ -137,5 +141,5 @@ export function renderProgram(node: Node, currentNode: Node): Element {
     return span("(...)");
   }
 
-  return renderBlock(node.children[0]);
+  return renderBlock(node);
 }
