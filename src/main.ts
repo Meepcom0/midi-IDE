@@ -114,7 +114,7 @@ function eventLoop(key: K): void {
           break;
         case Mode.VAR_INPUT:
           //enter var name
-          if (key === K.G2) {
+          if (key === K.A3) {
             //finish var name and continue
             mode = Mode.EDIT
             currentNode = getNextBlankLeaf(currentNode)
@@ -124,7 +124,7 @@ function eventLoop(key: K): void {
           }
           break;
         case Mode.INT_INPUT:
-          if (key === K.B2) {
+          if (key === K.B3) {
             //finish const and continue
             mode = Mode.EDIT
             currentNode = getNextBlankLeaf(currentNode) 
@@ -134,7 +134,7 @@ function eventLoop(key: K): void {
             currentNode.data[i] = 1 - currentNode.data[i];
           }
         case Mode.STR_INPUT:
-          if (key === K.A2) {
+          if (key === K.AA3) {
             //TODO
             mode = Mode.EDIT;
           }
