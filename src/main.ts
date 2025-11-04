@@ -103,21 +103,16 @@ function eventLoop(key: K): void {
           //uses C3-G3 + C4 - A4 for typing operators
           if (EDIT_KEY_NODE_TYPE_MAP.has(key)) {
             let new_type = EDIT_KEY_NODE_TYPE_MAP.get(key);
-            if (currentNode.parent!.type === NodeType.BLOCK) {
-              if (NODE_TYPE_STATEMENTS.includes(new_type!)) {
+            if ((currentNode.parent!.type === NodeType.BLOCK) && (NODE_TYPE_STATEMENTS.includes(new_type!))) {
                 currentNode.parent!.children.push(
                   blankNode(
                     currentNode.parent!,
                     currentNode.parent!.children.length
                   )
                 );
-                fillNode(currentNode, new_type!);
-                currentNode = currentNode.children[0];
-              }
-            } else {
-              fillNode(currentNode, new_type!);
-              currentNode = currentNode.children[0];
             }
+            fillNode(currentNode, new_type!);
+            currentNode = currentNode.children[0];
           } else {
             //switch to input const or var name mode
             switch (key) {
